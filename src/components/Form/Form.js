@@ -13,6 +13,7 @@ import {
   Transition,
 } from '../styled/index';
 
+
 const Div = styled(Transition)`
   backdrop-filter: blur(10px);
   background-color: rgba(0, 0, 0, 0.3);
