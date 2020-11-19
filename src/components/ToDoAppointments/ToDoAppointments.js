@@ -3,11 +3,20 @@ import { useSelector } from 'react-redux';
 import ToDoSingle from './ToDoSingle';
 import { v4 as uuid } from 'uuid';
 import axios from 'axios';
-import { Container, Table, Input, List, Buttonlist, Form } from '../styled/index';
+import {
+  Container,
+  Table,
+  Input,
+  List,
+  Buttonlist,
+  Form,
+} from '../styled/index';
+import Snackbar from '../Snackbar/Snackbar';
 
 const ToDoAppointments = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [editItem, setEditItem] = useState('');
+  let [snackBar, setsnackBar] = useState(null);
   const [value, setValue] = useState({
     date: { value: '' },
     hours: { value: '' },
@@ -25,6 +34,19 @@ const ToDoAppointments = () => {
   const url = 'http://appointments.draft2017.com/appointments/';
 
   useEffect(() => {
+    let id;
+    if (snackBar !== null) {
+      id = setTimeout(() => {
+        setsnackBar(null);
+      }, 2500);
+    }
+
+    return () => {
+      id && clearTimeout(id);
+    };
+  }, [snackBar]);
+
+  useEffect(() => {
     axios
       .get(url, {
         headers: {
@@ -34,8 +56,48 @@ const ToDoAppointments = () => {
       .then((response) => {
         setTasks(response.data);
       })
-      .catch((err) => {});
+      .catch((err) => {
+        setsnackBar(
+          <Snackbar isError="#f44336" show={true}>
+            {err ? err.message : null}
+          </Snackbar>
+        );
+      });
   }, [token, tasks.length, isEdit]);
+
+  const onChangeCheckbox = (id) => {
+    const updateTasks = [...tasks];
+    const index = tasks.findIndex((el) => el.id === id);
+    updateTasks[index].Done = !updateTasks[index].Done;
+
+    axios
+      .put(url + id, updateTasks[index], {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setsnackBar(
+          updateTasks[index].Done ? (
+            <Snackbar isError="#4caf50" show={true}>
+              You mark your appointment as done
+            </Snackbar>
+          ) : (
+            <Snackbar isError="#f44336" show={true}>
+              You unmark your appointment
+            </Snackbar>
+          )
+        );
+        setTasks(updateTasks);
+      })
+      .catch((err) => {
+        setsnackBar(
+          <Snackbar isError="#f44336" show={true}>
+            {err ? err.message : null}
+          </Snackbar>
+        );
+      });
+  };
 
   const onChangeHandler = (e) => {
     setValue({ ...value, [e.target.name]: { value: e.target.value } });
@@ -53,16 +115,17 @@ const ToDoAppointments = () => {
       updateItems[index].Title = value.title.value;
 
       axios
-        .put(
-          url + editItem.id,
-          updateItems[index],
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+        .put(url + editItem.id, updateItems[index], {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         .then((response) => {
+          setsnackBar(
+            <Snackbar isError="#4caf50" show={true}>
+              You update your task
+            </Snackbar>
+          );
           setTasks(updateItems);
           setValue({
             date: { value: '' },
@@ -72,7 +135,13 @@ const ToDoAppointments = () => {
           });
           setIsEdit(false);
         })
-        .catch((err) => {});
+        .catch((err) => {
+          setsnackBar(
+            <Snackbar isError="#f44336" show={true}>
+              {err ? err.message : null}
+            </Snackbar>
+          );
+        });
     } else {
       const task = {
         Date: value.date.value,
@@ -82,7 +151,7 @@ const ToDoAppointments = () => {
         Email: email,
         id: uuid(),
       };
-     
+
       axios
         .post(url, task, {
           headers: {
@@ -90,6 +159,11 @@ const ToDoAppointments = () => {
           },
         })
         .then((response) => {
+          setsnackBar(
+            <Snackbar isError="#4caf50" show={true}>
+              You add task
+            </Snackbar>
+          );
           setTasks([...tasks, task]);
           setValue({
             date: { value: '' },
@@ -98,22 +172,44 @@ const ToDoAppointments = () => {
             title: { value: '' },
           });
         })
-        .catch((err) => {});
+        .catch((err) => {
+          setsnackBar(
+            <Snackbar isError="#f44336" show={true}>
+              {err ? err.message : null}
+            </Snackbar>
+          );
+        });
     }
   };
 
   const onDeleteHandler = (id) => {
     const items = tasks.filter((el) => el.id !== id);
-    axios
-      .delete(url + id, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        setTasks(items);
-      })
-      .catch((err) => {});
+    // eslint-disable-next-line no-restricted-globals
+    let answer = confirm('Are you sure you want to Delete your task!');
+    if (answer === true) {
+      axios
+        .delete(url + id, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((response) => {
+          setsnackBar(
+            <Snackbar isError="#f44336" show={answer === true}>
+              You delete your task
+            </Snackbar>
+          );
+          setTasks(items);
+        })
+        .catch((err) => {
+          setsnackBar(
+            <Snackbar isError="#f44336" show={true}>
+              {err ? err.message : null}
+            </Snackbar>
+          );
+        });
+    }
+    return;
   };
 
   const onCLickEdit = (id) => {
@@ -124,12 +220,13 @@ const ToDoAppointments = () => {
     updateValues.time.value = item.Time;
     updateValues.title.value = item.Title;
     setValue(updateValues);
-    setEditItem({ ...updateValues, id: id});
+    setEditItem({ ...updateValues, id: id });
     setIsEdit(true);
   };
 
   return (
     <Container>
+      {snackBar}
       <h1>Tasks</h1>
       {loading && <h1>Loading...</h1>}
       <Form onSubmit={onSubmitHandler}>
@@ -176,6 +273,7 @@ const ToDoAppointments = () => {
         <Table>
           <thead>
             <tr>
+              <th>Done</th>
               <th>Date</th>
               <th>Hours</th>
               <th>Time</th>
@@ -191,6 +289,9 @@ const ToDoAppointments = () => {
               tasks.map((el, i) => (
                 <ToDoSingle
                   key={i}
+                  done={el.Done}
+                  value={el.Title}
+                  changed={() => onChangeCheckbox(el.id)}
                   date={el.Date}
                   hours={el.Hours}
                   time={el.Time}

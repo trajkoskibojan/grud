@@ -40,6 +40,7 @@ export const auth = (email, password, username) => {
 
     axios.post(url, authData)
       .then((response) => {
+        localStorage.setItem('token', response.data.jwt);
         dispatch(dataSuccess(response.data.jwt, username, email));
       })
       .catch((err) => {

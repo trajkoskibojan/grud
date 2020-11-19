@@ -2,7 +2,7 @@ import * as actionTypes from '../../store/actions/actionTypes';
 import { updateObject } from '../../shared/utility';
 
 const initialState = {
-  token: null,
+  token: localStorage.getItem('token') || null,
   user: null,
   email: null,
   loading: false,
@@ -13,10 +13,11 @@ const initialState = {
 const onOpenHandler = (state, action) => {
   let btnText = action.e.currentTarget.innerText;
   if (btnText === 'Log out') {
+    localStorage.removeItem('token');
     return updateObject(state, { token: null });
   } else {
     return updateObject(state, { show: true });
-  }
+  } 
 };
 const onCloseHandler = (state, action) => updateObject(state, { show: false });
 

@@ -24,28 +24,41 @@ const Tr = styled.tr`
 `;
 
 const ToDoSingle = ({
-  date, 
-  hours, 
+  date,
+  hours,
   time,
   title,
   created,
   updated,
   clickDelete,
   clickEdit,
+  done,
+  value,
+  changed,
 }) => {
   return (
-      <Tr>
-        <td>{date}</td>
-        <td>{hours}</td>
-        <td>{time}</td>
-        <td>{title}</td>
-        <td>{created}</td>
-        <td>{updated}</td>
-        <td>
-          <Button onClick={clickDelete}>Delete</Button>
-        </td>
-        <td>{<Button onClick={clickEdit}>Edit</Button>}</td>
-      </Tr>
+    <Tr>
+      <td>
+        <input
+          type="checkbox"
+          name="checkbox"
+          id="checkbox"
+          value={value}
+          onChange={changed}
+          checked={done}
+        />
+      </td>
+      <td>{date}</td>
+      <td>{hours}</td>
+      <td>{time}</td>
+      <td>{title}</td>
+      <td>{created}</td>
+      <td>{updated}</td>
+      <td>
+        <Button onClick={clickDelete}>Delete</Button>
+      </td>
+      <td>{<Button onClick={clickEdit}>Edit</Button>}</td>
+    </Tr>
   );
 };
 

@@ -30,9 +30,13 @@ const ToDoSingle = ({
   updated,
   clickDelete,
   clickEdit,
+  done,
+  value,
+  changed
 }) => {
   return (
       <Tr>
+      <td><input type="checkbox" name="checkbox" id="checkbox" value={value} onChange={changed} checked={ done}/></td>
         <td>{title}</td>
         <td>{description}</td>
         <td>{created}</td>

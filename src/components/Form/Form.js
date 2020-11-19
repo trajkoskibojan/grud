@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
 import { CSSTransition } from 'react-transition-group';
@@ -7,7 +7,6 @@ import { updateObject } from '../../shared/utility';
 
 import closeIcon from '../../assets/icons/close.svg';
 import {
-  H1 as heading,
   P as Par,
   Svg as SvgClose,
   Button as Btn,
@@ -27,7 +26,7 @@ const Div = styled(Transition)`
 
 const FormSign = styled.form`
   background: #fff;
-  padding: 3em 4em 0 4em;
+  padding: 8em 4em 0 4em;
   width: 45rem;
   box-shadow: 0 0 1em #222;
   border-radius: 2px;
@@ -40,14 +39,6 @@ const FormSign = styled.form`
   @media (max-width: 460px) {
     width: 35rem;
   }
-`;
- 
-const H1 = styled(heading)`
-  margin: 0 0 5rem 0;
-  padding: 1rem;
-  text-align: center;
-  color: #6b6b6b;
-  border-bottom: solid 1px #e5e5e5;
 `;
 
 const P = styled(Par)`
@@ -117,16 +108,30 @@ const Button = styled(Btn)`
 `;
 
 const Form = () => {
-  const error = useSelector(state => state.home.error)
- 
+  const error = useSelector((state) => state.home.error);
+  const ref = useRef();
+
   const [valueInput, setValueInput] = useState({
     email: { value: '' },
-    password: { value: '',},
-    username: { value: '',},
+    password: { value: '' },
+    username: { value: '' },
   });
 
   const show = useSelector((state) => state.home.show);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    function closeModal(e) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        dispatch(actions.onCloseHandler());
+      }
+    }
+    document.addEventListener('mousedown', closeModal);
+    return () => {
+      document.removeEventListener('mousedown', closeModal);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ref]);
 
   const onChangeHandler = (e) => {
     const updateState = updateObject(valueInput, {
@@ -139,20 +144,20 @@ const Form = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-     dispatch(
-       actions.auth(
-         valueInput.email.value,
-         valueInput.password.value,
-         valueInput.username.value
-       )
+    dispatch(
+      actions.auth(
+        valueInput.email.value,
+        valueInput.password.value,
+        valueInput.username.value
+      )
     );
-    dispatch(actions.onCloseHandler())
+    dispatch(actions.onCloseHandler());
   };
 
   let errrorMessage = null;
 
   if (error) {
-    errrorMessage = <p>Error loading</p>
+    errrorMessage = <p>Error loading</p>;
   }
 
   return (
@@ -163,17 +168,15 @@ const Form = () => {
       timeout={500}
       classNames="fade"
     >
-      <Div >
+      <Div>
         {errrorMessage}
-        <FormSign
-          onSubmit={(e) => submitHandler(e)}
-        >
+        <FormSign ref={ref} onSubmit={(e) => submitHandler(e)}>
           <Svg
             path={closeIcon}
             id="3.-To-close"
             onClick={(e) => dispatch(actions.onCloseHandler(e))}
           />
-          <H1>Sign Up</H1>
+
           <P black="#6b6b6b">
             <Label htmlFor="Email" floatLabel>
               Email
